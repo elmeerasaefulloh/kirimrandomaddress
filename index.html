@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MetaMask ETH Sender</title>
+    <style>
+        /* CSS untuk menempatkan konten di tengah halaman */
+        body, html {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center; /* Menengahkan teks secara horizontal */
+            position: relative; /* Memastikan posisi relatif untuk notifikasi */
+        }
+
+        .content {
+            max-width: 600px; /* Lebar maksimum konten */
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            z-index: 1; /* Mengatur kedalaman tumpukan */
+            position: relative; /* Memastikan posisi relatif untuk konten */
+        }
+
+        /* Gaya asli Anda */
+        .popup-notification {
+            position: absolute; /* Mengatur notifikasi di posisi absolut */
+            top: 10px; /* Jarak dari atas */
+            left: 50%; /* Posisi tengah horizontal */
+            transform: translateX(-50%); /* Posisi horizontal di tengah */
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            background-color: #f8d7da; /* Warna notifikasi */
+            color: #721c24; /* Warna teks notifikasi */
+            display: none; /* Mulai dengan display none */
+            z-index: 2; /* Menempatkan di atas konten */
+        }
+
+        .success {
+            background-color: #d4edda; /* Warna notifikasi sukses */
+            color: #155724; /* Warna teks notifikasi sukses */
+        }
+
+        .error {
+            background-color: #f8d7da; /* Warna notifikasi gagal */
+            color: #721c24; /* Warna teks notifikasi gagal */
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h1>Kirim Random Address</h1>
+        <p>Gunakan untuk testnet | dyor</p>
+        <button id="connectButton" onclick="connect()">Connect MetaMask</button>
+        <p>Account: <span id="account">Not connected</span></p>
+        <p>Balance: <span id="balance">0</span> ETH</p>
+
+        <p>Pakai autoklik | Klik "Kirim" yang banyak</p>
+        <p>Baru konfirmasi di Metamask :p</p>
+        <button onclick="sendEth()">Kirim</button>
+        <p>Successful Transactions: <span id="successCount">0</span></p>
+    </div>
+
+    <div id="notification" class="popup-notification"></div>
+
+    <script>
+        let successCount = 0;
+
+        // Function to connect with MetaMask
+        async function connect() {
+            try {
+                // Request access to MetaMask accounts
+                const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+                const account = accounts[0]; // Get the first account
+                document.getElementById('account').textContent = account;
+
+                // Change button text to "Connected"
+                document.getElementById('connectButton').textContent = 'Connected';
+
+                // Fetch and display account balance
+                const balance = await ethereum.request({ method: 'eth_getBalance', params: [account] });
+                document.getElementById('balance').textContent = (balance / 1e18).toFixed(5); // Convert wei to ETH
+            } catch (error) {
+                console.error(error);
+                showNotification('MetaMask connection failed. Please make sure MetaMask is installed and unlocked.', 'error');
+            }
+        }
+
+        // Function to generate a random address (placeholder function)
+        function generateRandomAddress() {
+            // Implement your logic to generate a random Ethereum address here
+            // This is a placeholder function and should be replaced with actual implementation
+            return '0x' + [...Array(40)].map(() => Math.floor(Math.random() * 16).toString(16)).join('');
+        }
+
+        // Function to generate a random amount between 0.00001 and 0.0000001 ETH
+        function generateRandomAmount() {
+            return (Math.random() * (0.00001 - 0.0000001) + 0.0000001).toFixed(8);
+        }
+
+        // Function to send ETH
+        async function sendEth() {
+            const amount = generateRandomAmount();
+            const recipient = generateRandomAddress();
+
+            try {
+                const transactionParams = {
+                    from: ethereum.selectedAddress,
+                    to: recipient,
+                    value: '0x' + (parseFloat(amount) * 1e18).toString(16) // Convert ETH to wei
+                };
+
+                const txHash = await ethereum.request({
+                    method: 'eth_sendTransaction',
+                    params: [transactionParams]
+                });
+
+                successCount++;
+                document.getElementById('successCount').textContent = successCount;
+
+                //showNotification('Terkirim: ' + txHash + '\nKirim: ' + amount + '\nETH to ' + recipient, '\nsuccess');
+            } catch (error) {
+                console.error(error);
+                showNotification('Transaction failed.', 'error');
+            }
+        }
+
+        // Function to show notification
+        function showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = 'popup-notification ' + type;
+            notification.style.display = 'block';
+
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 1000); // Hide notification after 1 second
+        }
+    </script>
+</body>
+</html>
